@@ -32,26 +32,29 @@ slug 只使用小写字母、数字和连字符。
 
 ## 状态
 
-- `draft`：卡片专用姿势、配色或样稿待确认；不得批量生产文章卡片。
+- `draft`：卡片专用动作、配色或样稿待确认；不得批量生产文章卡片。
 - `confirmed`：用户明确确认后可用于文章生产并可设为当前 profile。
 
 每次修订增加 revision，旧文件使用 `-v2`、`-v3` 保留。
 
 ## 注册
 
-先运行 `character_registry.py resolve` 得到已确认人物的 `sheet`、`clean_reference` 和 `spec` 绝对路径，再与新生成的 `card_pose`、`theme` 一起注册。card profile 保存人物资产快照，确保后续渲染不会因当前角色切换而漂移。
+先运行 `character_registry.py resolve` 得到已确认人物的 `sheet`、`clean_reference` 和 `spec` 绝对路径，再与用户确认的动作描述、新生成的 `card_pose`、`theme` 一起注册。`card_action` 是 profile 的正式字段；不同用户可以使用站立讲解、指向内容、拿着平板、白板书写或坐着使用电脑等不同动作。card profile 保存人物资产快照，确保后续渲染不会因当前角色切换而漂移。
 
 ```bash
 python3 scripts/profile_registry.py register \
   --root <runtime-root> \
   --slug <slug> \
   --name "<显示名称>" \
+  --action "<用户确认的卡片动作>" \
   --sheet <character-sheet.png> \
   --clean-reference <character-clean.png> \
   --card-pose <character-card-pose.png> \
   --spec <character-spec.md> \
   --theme <theme.json>
 ```
+
+不得在用户未确认动作时注册新 profile。旧版 profile 如果没有 `card_action`，解析器会只为兼容目的补上原有的“盘腿使用电脑，身体和视线朝向内容区”；下一次修订时必须重新询问并写入用户明确选择的动作。
 
 ## 确认与解析
 

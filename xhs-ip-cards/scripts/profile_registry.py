@@ -15,6 +15,7 @@ from pathlib import Path
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 MANIFEST_NAME = "profile.json"
 CURRENT_NAME = "current-profile.json"
+LEGACY_CARD_ACTION = "盘腿使用电脑，身体和视线朝向内容区"
 
 
 def utc_now() -> str:
@@ -88,6 +89,10 @@ def resolved_manifest(root: Path, slug: str, allow_draft: bool = False) -> dict:
             raise FileNotFoundError(f"Missing {key}: {path}")
         assets[key] = str(path.resolve())
     manifest["assets"] = assets
+    action = manifest.get("card_action")
+    if not isinstance(action, str) or not action.strip():
+        action = LEGACY_CARD_ACTION
+    manifest["card_action"] = action.strip()
     manifest["manifest_path"] = str((directory / MANIFEST_NAME).resolve())
     return manifest
 
@@ -98,6 +103,9 @@ def command_register(args: argparse.Namespace) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / MANIFEST_NAME
     old = load_json(path) if path.exists() else {}
+    action = args.action.strip()
+    if not action:
+        raise ValueError("action must not be empty")
     assets = {
         "sheet": copy_versioned(Path(args.sheet), directory, "character-sheet").name,
         "clean_reference": copy_versioned(Path(args.clean_reference), directory, "character-clean").name,
@@ -107,9 +115,10 @@ def command_register(args: argparse.Namespace) -> None:
     }
     now = utc_now()
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "slug": args.slug,
         "name": args.name,
+        "card_action": action,
         "status": "draft",
         "revision": int(old.get("revision", 0)) + 1,
         "created_at": old.get("created_at", now),
@@ -184,6 +193,7 @@ def command_list(args: argparse.Namespace) -> None:
                 "name": item.get("name"),
                 "status": item.get("status"),
                 "revision": item.get("revision"),
+                "card_action": item.get("card_action") or LEGACY_CARD_ACTION,
                 "active": item.get("slug") == active,
                 "manifest_path": str(path.resolve()),
             })
@@ -194,7 +204,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Manage XHS IP card profiles")
     commands = parser.add_subparsers(dest="command", required=True)
     register = commands.add_parser("register")
-    for name in ("root", "slug", "name", "sheet", "clean-reference", "card-pose", "spec", "theme"):
+    for name in ("root", "slug", "name", "action", "sheet", "clean-reference", "card-pose", "spec", "theme"):
         register.add_argument(f"--{name}", required=True)
     register.set_defaults(func=command_register)
     confirm = commands.add_parser("confirm")
@@ -224,4 +234,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -1,4 +1,4 @@
 interface:
   display_name: "小红书个人 IP 书封知识卡片"
   short_description: "从个人 IP 和 Markdown 生成保留关键图的书封知识卡片"
-  default_prompt: "使用 $xhs-ip-cards 开始首次引导：先显示 Punk 的简短欢迎语，再引导我上传人物照片或已有 IP 图；确认人物和卡片样式后，把带关键图的 Markdown 制作成书封面与小红书内页。"
+  default_prompt: "使用 $xhs-ip-cards 开始首次引导：先显示 Punk 的简短欢迎语，再引导我上传人物照片或已有 IP 图，并询问希望人物在卡片里做什么动作；确认人物、动作和卡片样式后，把带关键图的 Markdown 制作成书封面与小红书内页。"
