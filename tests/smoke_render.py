@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RENDERER = ROOT / "xhs-ip-cards" / "scripts" / "render_cards.py"
+RENDERER = ROOT / "punk-xhs-cards" / "scripts" / "render_cards.py"
 
 
 def write_json(path: Path, value: dict) -> None:
@@ -22,7 +22,7 @@ def write_json(path: Path, value: dict) -> None:
 
 
 def main() -> int:
-    with tempfile.TemporaryDirectory(prefix="xhs-ip-cards-smoke-") as temp_value:
+    with tempfile.TemporaryDirectory(prefix="punk-xhs-cards-smoke-") as temp_value:
         temp = Path(temp_value)
         profile_dir = temp / "profile"
         profile_dir.mkdir()

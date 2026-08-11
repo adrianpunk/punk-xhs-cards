@@ -279,13 +279,13 @@ func drawBlock(_ block: Block, at y: CGFloat, assetBaseURL: URL) throws {
              color: Palette.ink, spacing: 7, mono: true)
     case "image":
         guard let value = block.path, !value.isEmpty else {
-            throw NSError(domain: "xhs-ip-cards", code: 2,
+            throw NSError(domain: "punk-xhs-cards", code: 2,
                 userInfo: [NSLocalizedDescriptionKey: "Image block is missing path"])
         }
         let candidate = URL(fileURLWithPath: value)
         let imageURL = value.hasPrefix("/") ? candidate : assetBaseURL.appendingPathComponent(value)
         guard let sourceImage = NSImage(contentsOf: imageURL) else {
-            throw NSError(domain: "xhs-ip-cards", code: 3,
+            throw NSError(domain: "punk-xhs-cards", code: 3,
                 userInfo: [NSLocalizedDescriptionKey: "Cannot load image block: \(imageURL.path)"])
         }
         let mediaHeight = min(520, max(220, CGFloat(block.height ?? 360)))
@@ -413,7 +413,7 @@ func drawContent(_ card: Card, page: Int, total: Int, handle: String, brandLabel
     for block in blocks {
         let h = blockHeight(block)
         if y + h > 1190 {
-            throw NSError(domain: "xhs-ip-cards", code: 1,
+            throw NSError(domain: "punk-xhs-cards", code: 1,
                 userInfo: [NSLocalizedDescriptionKey: "Card \(page) content overflows by \(Int(y + h - 1190)) px; reduce or redistribute blocks"])
         }
         try drawBlock(block, at: y, assetBaseURL: assetBaseURL)

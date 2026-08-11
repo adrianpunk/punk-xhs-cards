@@ -34,7 +34,7 @@ def safe_extension(source: str, content_type: str | None = None) -> str:
 def collect(item: dict, destination: Path, timeout: float) -> tuple[Path, str]:
     source = item["source"]
     if item["remote"]:
-        request = Request(source, headers={"User-Agent": "Mozilla/5.0 xhs-ip-cards/1.0"})
+        request = Request(source, headers={"User-Agent": "Mozilla/5.0 punk-xhs-cards/1.0"})
         with urlopen(request, timeout=timeout) as response:
             data = response.read()
             extension = safe_extension(source, response.headers.get("Content-Type"))

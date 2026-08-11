@@ -1,4 +1,4 @@
-# xhs-ip-cards
+# Punk XHS Cards
 
 把人物照片或已有 IP 形象，和一篇带截图的 Markdown 长文，制作成一套可直接发布到小红书的竖版知识卡片。
 
@@ -42,15 +42,15 @@
 ### 方式一：克隆到 Codex Skills 目录
 
 ```bash
-git clone https://github.com/adrianpunk/xhs-ip-cards.git
-cp -R xhs-ip-cards/xhs-ip-cards ~/.codex/skills/
+git clone https://github.com/adrianpunk/punk-xhs-cards.git
+cp -R punk-xhs-cards/punk-xhs-cards ~/.codex/skills/
 ```
 
 Windows PowerShell：
 
 ```powershell
-git clone https://github.com/adrianpunk/xhs-ip-cards.git
-Copy-Item -Recurse xhs-ip-cards\xhs-ip-cards "$HOME\.codex\skills\xhs-ip-cards"
+git clone https://github.com/adrianpunk/punk-xhs-cards.git
+Copy-Item -Recurse punk-xhs-cards\punk-xhs-cards "$HOME\.codex\skills\punk-xhs-cards"
 ```
 
 安装后重新打开一个 Codex 任务，或重启 Codex，使新 Skill 出现在可用 Skills 列表中。
@@ -58,21 +58,21 @@ Copy-Item -Recurse xhs-ip-cards\xhs-ip-cards "$HOME\.codex\skills\xhs-ip-cards"
 安装跨平台渲染依赖：
 
 ```bash
-python3 -m pip install -r ~/.codex/skills/xhs-ip-cards/requirements.txt
+python3 -m pip install -r ~/.codex/skills/punk-xhs-cards/requirements.txt
 ```
 
 Windows 使用：
 
 ```powershell
-py -3 -m pip install -r "$HOME\.codex\skills\xhs-ip-cards\requirements.txt"
+py -3 -m pip install -r "$HOME\.codex\skills\punk-xhs-cards\requirements.txt"
 ```
 
 ### 方式二：手动安装
 
-下载仓库 ZIP，解压后把其中的 `xhs-ip-cards/` 目录复制到：
+下载仓库 ZIP，解压后把其中的 `punk-xhs-cards/` 目录复制到：
 
 ```text
-~/.codex/skills/xhs-ip-cards/
+~/.codex/skills/punk-xhs-cards/
 ```
 
 ## 使用
@@ -80,14 +80,14 @@ py -3 -m pip install -r "$HOME\.codex\skills\xhs-ip-cards\requirements.txt"
 第一次使用时，可以直接对 Codex 说：
 
 ```text
-请使用 $xhs-ip-cards。先根据我上传的照片建立个人 IP，
+请使用 $punk-xhs-cards。先根据我上传的照片建立个人 IP，
 确认人物、卡片动作和视觉风格后，再把我提供的 Markdown 做成小红书知识卡片。
 ```
 
 首次启动且还没有确认人物时，Skill 会显示：
 
 ```text
-Hi，我是 Punk，欢迎使用「小红书个人 IP 书封知识卡片」Skill。
+Hi，我是 Punk，欢迎使用「Punk XHS Cards」Skill。
 
 我做这个 Skill，是想帮助多平台内容创作者更轻松地复用自己的优质内容。你可以把发布在 𝕏、微信公众号等平台的长文，转换成适合小红书阅读和发布的竖版知识卡片。
 
@@ -108,7 +108,7 @@ Hi，我是 Punk，欢迎使用「小红书个人 IP 书封知识卡片」Skill�
 如果已有个人 IP：
 
 ```text
-请使用 $xhs-ip-cards，把这张现成 IP 图登记为我的人物形象。
+请使用 $punk-xhs-cards，把这张现成 IP 图登记为我的人物形象。
 卡片里希望人物站立讲解，并用右手指向左上方内容区。
 确认样稿后，我会继续上传 Markdown。
 ```
@@ -162,13 +162,13 @@ Hi，我是 Punk，欢迎使用「小红书个人 IP 书封知识卡片」Skill�
 检查当前系统能否渲染：
 
 ```bash
-python3 ~/.codex/skills/xhs-ip-cards/scripts/render_cards.py --check
+python3 ~/.codex/skills/punk-xhs-cards/scripts/render_cards.py --check
 ```
 
 Windows 使用：
 
 ```powershell
-py -3 "$HOME\.codex\skills\xhs-ip-cards\scripts\render_cards.py" --check
+py -3 "$HOME\.codex\skills\punk-xhs-cards\scripts\render_cards.py" --check
 ```
 
 没有图像生成能力时，Skill 会输出完整的角色或 Hero 提示词与保存计划，但不会假装图片已经生成。
@@ -178,7 +178,7 @@ py -3 "$HOME\.codex\skills\xhs-ip-cards\scripts\render_cards.py" --check
 ```text
 .
 ├── README.md
-└── xhs-ip-cards/
+└── punk-xhs-cards/
     ├── SKILL.md
     ├── agents/
     ├── assets/
@@ -186,11 +186,13 @@ py -3 "$HOME\.codex\skills\xhs-ip-cards\scripts\render_cards.py" --check
     └── scripts/
 ```
 
-`xhs-ip-cards/` 是可直接安装的 Skill 包；仓库根目录只放面向使用者的说明和项目级文件。
+`punk-xhs-cards/` 是可直接安装的 Skill 包；仓库根目录只放面向使用者的说明和项目级文件。
 
 ## 隐私说明
 
 Skill 会把用户照片、人物 profile、文章和卡片输出保存在运行时目录，而不是 Skill 目录。提交或分享项目时，请继续排除 `.punk-ip-assets/`、`.xhs-ip-cards/` 和文章输出目录。
+
+为兼容改名前已经确认的人物与卡片 Profile，Punk XHS Cards 继续读取 `.xhs-ip-cards/` 运行数据目录；升级后不需要重新建立人物。
 
 图片生成过程仍会把用户提供的参考图交给当前宿主的图像生成服务处理；请根据你使用的平台和账号设置判断是否适合上传相应照片。
 

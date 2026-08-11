@@ -3,18 +3,18 @@ name: Cross-platform renderer
 on:
   push:
     paths:
-      - "xhs-ip-cards/scripts/render_cards.py"
-      - "xhs-ip-cards/scripts/render_cards.sh"
-      - "xhs-ip-cards/scripts/render_cards.ps1"
-      - "xhs-ip-cards/requirements.txt"
+      - "punk-xhs-cards/scripts/render_cards.py"
+      - "punk-xhs-cards/scripts/render_cards.sh"
+      - "punk-xhs-cards/scripts/render_cards.ps1"
+      - "punk-xhs-cards/requirements.txt"
       - "tests/smoke_render.py"
       - ".github/workflows/cross-platform-render.yml"
   pull_request:
     paths:
-      - "xhs-ip-cards/scripts/render_cards.py"
-      - "xhs-ip-cards/scripts/render_cards.sh"
-      - "xhs-ip-cards/scripts/render_cards.ps1"
-      - "xhs-ip-cards/requirements.txt"
+      - "punk-xhs-cards/scripts/render_cards.py"
+      - "punk-xhs-cards/scripts/render_cards.sh"
+      - "punk-xhs-cards/scripts/render_cards.ps1"
+      - "punk-xhs-cards/requirements.txt"
       - "tests/smoke_render.py"
       - ".github/workflows/cross-platform-render.yml"
 
@@ -41,6 +41,6 @@ jobs:
           if (-not (Test-Path $font)) { $font = "C:\Windows\Fonts\arial.ttf" }
           "XHS_IP_CARDS_FONT=$font" | Out-File -FilePath $env:GITHUB_ENV -Append
       - name: Install renderer dependency
-        run: python -m pip install -r xhs-ip-cards/requirements.txt
+        run: python -m pip install -r punk-xhs-cards/requirements.txt
       - name: Run smoke test
         run: python tests/smoke_render.py
