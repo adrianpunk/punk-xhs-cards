@@ -100,6 +100,7 @@ Hi，我是 Punk，欢迎使用「小红书个人 IP 书封知识卡片」Skill�
 - `references/hero-image-prompt.md`
 - `references/card-data-schema.md`
 - `references/markdown-images.md`
+- `references/platform-rendering.md`
 - 当前 profile 的 `theme.json`、`profile.json` 和 `character-spec.md`
 
 先运行：
@@ -128,7 +129,8 @@ python3 scripts/parse_markdown.py <source.md>
 3. 生成一张 16:9 横版纯图 Hero：无文字、无数字、无 Logo、无水印、无人物。
 4. 检查 Hero 是否只讲一个视觉故事，并保存到文章输出目录。
 5. 建立新格式 `cards.json`：顶层 `cover` 保存标题、作者和 Hero 路径；`cards` 只保存内页。
-6. 渲染封面。封面固定要求：
+6. 按 `references/platform-rendering.md` 检查 Pillow 与中文字体，再用 `scripts/render_cards.py` 渲染仅含 `cover`、且 `cards` 为空的封面草稿。Windows 不得调用 Swift 版本。
+7. 封面固定要求：
    - 1080×1440；
    - 不显示左上栏目、右上页码或任何封面页码；
    - 顶部为 16:9 Hero；
@@ -137,11 +139,11 @@ python3 scripts/parse_markdown.py <source.md>
    - 下部为深强调色书封区域，账号位于左下并使用强调字形；
    - 不显示品牌名；
    - 人物固定整页右下角，aspect-fit 等比例显示。
-7. 展示 Hero 和完整封面，只询问确认还是修改。封面未确认时不得拆分内页。
+8. 展示 Hero 和完整封面，只询问确认还是修改。封面未确认时不得拆分内页。
 
 ## 制作内页
 
-封面确认后完整读取 `references/content-workflow.md`、`references/markdown-images.md` 和 `references/card-data-schema.md`。
+封面确认后完整读取 `references/content-workflow.md`、`references/markdown-images.md`、`references/card-data-schema.md` 和 `references/platform-rendering.md`。
 
 1. 默认交付 10 张：1 张无页码封面＋9 张内页；文章需要时可调整内页数量，不重复内容凑页。
 2. 内页从 `01` 开始，页码总数只计算内页，例如 `01 / 09`；封面不参与页码。
@@ -149,15 +151,18 @@ python3 scripts/parse_markdown.py <source.md>
 4. 对已选关键图运行 `scripts/collect_markdown_images.py`，复制或下载到 `assets/article-images/`。每张图只使用一次，默认每页最多一张；细节密集的图可单独成页。
 5. 在 `cards.json` 使用 `image` block 放入关键图，并只使用原文 alt、相邻图注或正文语境撰写图注，不虚构图片含义。
 6. 教程模式按原文顺序编排步骤图。凡用于确认“点哪里、输入什么、选择什么、完成后看到什么”的截图必须出现；为保持可读性可以增加内页，不能为了固定 10 张删图或压缩到看不清。
-7. 生成 `cards.json` 后运行：
+7. 首次渲染先按 `references/platform-rendering.md` 运行 `scripts/render_cards.py --check`，确认 Pillow 和中文字体可用。不得因为当前系统不是 macOS 而跳过渲染。
+8. 生成 `cards.json` 后使用跨平台 Python 渲染器：
 
    ```bash
-   scripts/render_cards.sh <cards.json绝对路径> <output目录绝对路径> <profile.json绝对路径>
+   python3 scripts/render_cards.py <cards.json绝对路径> <output目录绝对路径> <profile.json绝对路径>
    ```
 
-8. 逐张检查截断、重叠、步骤顺序、关键图可读性、主题配色和人物比例。
-9. 生成 `publish-copy.md`：一个推荐标题、三个备选标题、一段正文和 6–10 个 tags。
-10. 运行 `scripts/validate_output.py`；它会检查已收集的关键图是否都进入卡片。通过后再把 `cover.png` 与 `card-01.png ...` 一起打 ZIP。
+   Windows 使用 `py -3 scripts\render_cards.py ...` 或 `scripts\render_cards.ps1`；macOS 与 Linux 也可使用 `scripts/render_cards.sh`。样稿追加 `--allow-draft`。
+
+9. 逐张检查截断、重叠、步骤顺序、关键图可读性、主题配色和人物比例。
+10. 生成 `publish-copy.md`：一个推荐标题、三个备选标题、一段正文和 6–10 个 tags。
+11. 运行 `scripts/validate_output.py`；它会检查已收集的关键图是否都进入卡片。通过后再把 `cover.png` 与 `card-01.png ...` 一起打 ZIP。
 
 ## 输出结构
 
@@ -180,6 +185,7 @@ python3 scripts/parse_markdown.py <source.md>
 ## 固定质量要求
 
 - 所有图片 1080×1440；Hero 源图为 16:9。
+- 在 macOS、Windows 和 Linux 上优先使用同一个 `render_cards.py`，不得维护三套不同版式。
 - 人物每张只出现一次，必须等比例、不裁头、不改变脸。
 - 封面、Hero 和内页必须使用当前人物 profile 的同一主色系统；Punk 使用红色只是 Punk profile 的结果，不是通用模板色。
 - 封面不计页码；内页从 01 开始。

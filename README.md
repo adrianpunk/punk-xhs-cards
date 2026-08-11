@@ -14,6 +14,7 @@
 - 生成无文字、16:9 的抽象 Hero 图
 - 生成 1080×1440 的不规则书封面：完整书名、作者、人物 IP，无封面页码
 - 从 `01` 开始生成正文卡片，并自动检查图片遗漏、文字截断和人物比例
+- 使用同一套 Python/Pillow 渲染器支持 macOS、Windows 和 Linux
 - 生成一个推荐标题、三个备选标题、小红书正文和 6–10 个 tags
 
 ## 工作流
@@ -45,7 +46,26 @@ git clone https://github.com/adrianpunk/xhs-ip-cards.git
 cp -R xhs-ip-cards/xhs-ip-cards ~/.codex/skills/
 ```
 
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/adrianpunk/xhs-ip-cards.git
+Copy-Item -Recurse xhs-ip-cards\xhs-ip-cards "$HOME\.codex\skills\xhs-ip-cards"
+```
+
 安装后重新打开一个 Codex 任务，或重启 Codex，使新 Skill 出现在可用 Skills 列表中。
+
+安装跨平台渲染依赖：
+
+```bash
+python3 -m pip install -r ~/.codex/skills/xhs-ip-cards/requirements.txt
+```
+
+Windows 使用：
+
+```powershell
+py -3 -m pip install -r "$HOME\.codex\skills\xhs-ip-cards\requirements.txt"
+```
 
 ### 方式二：手动安装
 
@@ -61,7 +81,7 @@ cp -R xhs-ip-cards/xhs-ip-cards ~/.codex/skills/
 
 ```text
 请使用 $xhs-ip-cards。先根据我上传的照片建立个人 IP，
-确认人物和卡片风格后，再把我提供的 Markdown 做成小红书知识卡片。
+确认人物、卡片动作和视觉风格后，再把我提供的 Markdown 做成小红书知识卡片。
 ```
 
 首次启动且还没有确认人物时，Skill 会显示：
@@ -135,8 +155,21 @@ Hi，我是 Punk，欢迎使用「小红书个人 IP 书封知识卡片」Skill�
 ## 运行要求
 
 - Codex，且当前环境能够调用图像生成工具
-- Python 3
-- macOS：当前确定性卡片渲染器使用 Swift 与 AppKit
+- Python 3.10 或更新版本
+- Pillow 10–12，可通过 Skill 内的 `requirements.txt` 安装
+- 中文字体：macOS 使用苹方，Windows 使用微软雅黑，Linux 推荐 Noto Sans CJK
+
+检查当前系统能否渲染：
+
+```bash
+python3 ~/.codex/skills/xhs-ip-cards/scripts/render_cards.py --check
+```
+
+Windows 使用：
+
+```powershell
+py -3 "$HOME\.codex\skills\xhs-ip-cards\scripts\render_cards.py" --check
+```
 
 没有图像生成能力时，Skill 会输出完整的角色或 Hero 提示词与保存计划，但不会假装图片已经生成。
 
@@ -163,6 +196,7 @@ Skill 会把用户照片、人物 profile、文章和卡片输出保存在运行
 
 ## 当前边界
 
-- 目前的确定性渲染脚本面向 macOS；Windows 和 Linux 尚未提供等价渲染器
+- macOS、Windows 和 Linux 共用 Python/Pillow 渲染器；旧版 Swift/AppKit 文件只为兼容保留
+- 精简 Linux 系统通常没有中文字体，需要先安装 Noto Sans CJK 或通过 `--font` 指定字体
 - 中文标题、正文与教程型 Markdown 是当前主要优化方向
 - 最终效果仍取决于输入照片质量、Markdown 结构和截图清晰度

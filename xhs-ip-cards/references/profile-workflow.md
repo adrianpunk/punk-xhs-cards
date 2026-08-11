@@ -66,4 +66,4 @@ python3 scripts/profile_registry.py activate --root <runtime-root> --slug <slug>
 python3 scripts/profile_registry.py list --root <runtime-root>
 ```
 
-渲染正式文章时直接把 `profile.json` 绝对路径传给 `render_cards.sh`。生成确认前样稿时追加 `--allow-draft`。
+渲染正式文章时直接把 `profile.json` 绝对路径传给跨平台 `render_cards.py`。生成确认前样稿时追加 `--allow-draft`。按操作系统选择 Python 命令和包装脚本，完整规则见 `references/platform-rendering.md`。
