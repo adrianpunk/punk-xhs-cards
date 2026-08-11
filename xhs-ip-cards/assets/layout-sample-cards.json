@@ -1,0 +1,18 @@
+{
+  "seriesTitle": "个人 IP 版式样稿",
+  "cards": [
+    {
+      "kind": "content",
+      "eyebrow": "01 · 正文样稿",
+      "title": "你的个人 IP，将成为内容的一部分",
+      "blocks": [
+        {"kind": "paragraph", "text": "版面以文字阅读为主，人物只出现在右下角签名区。主题色来自人物服装或个人品牌色，不会堆叠过多颜色。"},
+        {"kind": "highlight", "text": "人物负责建立记忆，排版负责把内容讲清楚。"},
+        {"kind": "section", "text": "固定的三个视觉规则"},
+        {"kind": "item", "number": "01", "title": "一个主色", "body": "结构线、编号和重点框统一使用同一色系。"},
+        {"kind": "item", "number": "02", "title": "内容优先", "body": "标题醒目，正文高对比，不让人物遮挡文字。"},
+        {"kind": "item", "number": "03", "title": "比例稳定", "body": "人物始终等比例缩放，保持脸型和自然头身关系。"}
+      ]
+    }
+  ]
+}

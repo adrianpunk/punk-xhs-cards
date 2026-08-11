@@ -1,0 +1,66 @@
+# Profile 状态与目录
+
+card profile 是已确认人物角色的小红书视觉扩展，不负责从照片创建人物。人物角色沿用 `references/character-package.md` 和 `.punk-ip-assets/`；只有 `confirmed` 人物才能注册 card profile。
+
+## 运行目录
+
+默认使用当前项目：
+
+```text
+<project-root>/.xhs-ip-cards/
+```
+
+用户明确指定位置时遵循用户选择。不要把运行数据、真人照片或生成角色写进 Skill 安装目录。
+
+## 目录结构
+
+```text
+.xhs-ip-cards/
+├── current-profile.json
+└── profiles/
+    └── <profile-slug>/
+        ├── profile.json
+        ├── character-sheet.png
+        ├── character-clean.png
+        ├── character-card-pose.png
+        ├── character-spec.md
+        ├── theme.json
+        └── layout-sample.png
+```
+
+slug 只使用小写字母、数字和连字符。
+
+## 状态
+
+- `draft`：卡片专用姿势、配色或样稿待确认；不得批量生产文章卡片。
+- `confirmed`：用户明确确认后可用于文章生产并可设为当前 profile。
+
+每次修订增加 revision，旧文件使用 `-v2`、`-v3` 保留。
+
+## 注册
+
+先运行 `character_registry.py resolve` 得到已确认人物的 `sheet`、`clean_reference` 和 `spec` 绝对路径，再与新生成的 `card_pose`、`theme` 一起注册。card profile 保存人物资产快照，确保后续渲染不会因当前角色切换而漂移。
+
+```bash
+python3 scripts/profile_registry.py register \
+  --root <runtime-root> \
+  --slug <slug> \
+  --name "<显示名称>" \
+  --sheet <character-sheet.png> \
+  --clean-reference <character-clean.png> \
+  --card-pose <character-card-pose.png> \
+  --spec <character-spec.md> \
+  --theme <theme.json>
+```
+
+## 确认与解析
+
+```bash
+python3 scripts/profile_registry.py confirm --root <runtime-root> --slug <slug>
+python3 scripts/profile_registry.py resolve --root <runtime-root>
+python3 scripts/profile_registry.py resolve --root <runtime-root> --slug <slug> --allow-draft
+python3 scripts/profile_registry.py activate --root <runtime-root> --slug <slug>
+python3 scripts/profile_registry.py list --root <runtime-root>
+```
+
+渲染正式文章时直接把 `profile.json` 绝对路径传给 `render_cards.sh`。生成确认前样稿时追加 `--allow-draft`。
