@@ -96,6 +96,16 @@ def main() -> int:
             with Image.open(path) as result:
                 if result.size != (1080, 1440):
                     raise AssertionError(f"Unexpected size for {name}: {result.size}")
+        with Image.open(temp / "output" / "cover.png") as cover:
+            rgba = cover.convert("RGBA")
+            accent = (212, 56, 42, 255)
+            # The new cover has no title panel: the upper corners remain theme color.
+            assert rgba.getpixel((70, 70)) == accent
+            # The macOS window contains a full 16:9 artwork area below the toolbar.
+            assert rgba.getpixel((80, 395)) != accent
+            assert rgba.getpixel((1000, 905)) != accent
+            # The lower cover is clean theme color except for the centered author name.
+            assert rgba.getpixel((100, 1120)) == accent
         print("Cross-platform renderer smoke test passed.")
     return 0
 
