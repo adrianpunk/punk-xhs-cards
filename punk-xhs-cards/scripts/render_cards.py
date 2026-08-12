@@ -59,12 +59,13 @@ def linux_font_candidates(bold: bool = False) -> list[Path]:
     return found
 
 
-def resolve_font_paths(custom_font: str | None, custom_mono: str | None) -> tuple[Path, Path, Path]:
+def resolve_font_paths(custom_font: str | None, custom_mono: str | None, custom_signature: str | None = None) -> tuple[Path, Path, Path, Path]:
     system = platform.system()
     windir = Path(os.environ.get("WINDIR", "C:/Windows"))
     regular_candidates: list[str | Path] = []
     bold_candidates: list[str | Path] = []
     mono_candidates: list[str | Path] = []
+    signature_candidates: list[str | Path] = []
     if custom_font:
         regular_candidates.append(custom_font)
         bold_candidates.append(custom_font)
@@ -82,10 +83,15 @@ def resolve_font_paths(custom_font: str | None, custom_mono: str | None) -> tupl
             "/System/Library/Fonts/STHeiti Medium.ttc",
         ]
         mono_candidates += ["/System/Library/Fonts/SFNSMono.ttf", "/System/Library/Fonts/Menlo.ttc"]
+        signature_candidates += [
+            "/System/Library/Fonts/Supplemental/SnellRoundhand.ttc",
+            "/System/Library/Fonts/Supplemental/SignPainter.ttc",
+        ]
     elif system == "Windows":
         regular_candidates += [windir / "Fonts/msyh.ttc", windir / "Fonts/simhei.ttf"]
         bold_candidates += [windir / "Fonts/msyhbd.ttc", windir / "Fonts/msyh.ttc", windir / "Fonts/simhei.ttf"]
         mono_candidates += [windir / "Fonts/consola.ttf", windir / "Fonts/cour.ttf"]
+        signature_candidates += [windir / "Fonts/segoesc.ttf", windir / "Fonts/seguisym.ttf"]
     else:
         regular_candidates += linux_font_candidates(False)
         bold_candidates += linux_font_candidates(True) + linux_font_candidates(False)
@@ -93,11 +99,20 @@ def resolve_font_paths(custom_font: str | None, custom_mono: str | None) -> tupl
             "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
             "/usr/share/fonts/truetype/liberation2/LiberationMono-Regular.ttf",
         ]
+        signature_candidates += [
+            "/usr/share/fonts/opentype/urw-base35/Z003-MediumItalic.otf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf",
+        ]
     if custom_mono:
         mono_candidates.insert(0, custom_mono)
     env_mono = os.environ.get("XHS_IP_CARDS_MONO_FONT")
     if env_mono:
         mono_candidates.insert(0, env_mono)
+    if custom_signature:
+        signature_candidates.insert(0, custom_signature)
+    env_signature = os.environ.get("XHS_IP_CARDS_SIGNATURE_FONT")
+    if env_signature:
+        signature_candidates.insert(0, env_signature)
     regular = existing(regular_candidates)
     bold = existing(bold_candidates)
     if regular is None:
@@ -108,18 +123,25 @@ def resolve_font_paths(custom_font: str | None, custom_mono: str | None) -> tupl
     if bold is None:
         bold = regular
     mono = existing(mono_candidates) or regular
-    return regular, bold, mono
+    signature = existing(signature_candidates) or bold
+    return regular, bold, mono, signature
 
 
 class Fonts:
-    def __init__(self, regular: Path, bold: Path, mono: Path):
+    def __init__(self, regular: Path, bold: Path, mono: Path, signature: Path):
         self.regular = regular
         self.bold = bold
         self.mono = mono
+        self.signature = signature
 
     @lru_cache(maxsize=128)
     def get(self, size: int, weight: str = "regular", mono: bool = False) -> ImageFont.FreeTypeFont:
         path = self.mono if mono else (self.bold if weight in {"medium", "semibold", "bold", "heavy"} else self.regular)
+        return ImageFont.truetype(str(path), size=size)
+
+    @lru_cache(maxsize=32)
+    def get_signature(self, size: int, latin: bool) -> ImageFont.FreeTypeFont:
+        path = self.signature if latin else self.bold
         return ImageFont.truetype(str(path), size=size)
 
 
@@ -224,6 +246,19 @@ class Renderer:
         py = y + height - image.height
         canvas.alpha_composite(image, (px, py))
 
+    @staticmethod
+    def aspect_fill(canvas: Image.Image, source: Image.Image, box: tuple[float, float, float, float]) -> None:
+        x, y, width, height = map(round, box)
+        scale = max(width / source.width, height / source.height)
+        resized = source.resize(
+            (max(1, round(source.width * scale)), max(1, round(source.height * scale))),
+            Image.Resampling.LANCZOS,
+        )
+        left = max(0, (resized.width - width) // 2)
+        top = max(0, (resized.height - height) // 2)
+        cropped = resized.crop((left, top, left + width, top + height))
+        canvas.alpha_composite(cropped, (x, y))
+
     def block_height(self, block: dict[str, Any]) -> float:
         kind = block.get("kind")
         if kind == "paragraph":
@@ -322,7 +357,60 @@ class Renderer:
         second = "".join(characters[split:]).strip()
         return value if not first or not second else first + "\n" + second
 
-    def draw_book_cover(self, cover: dict[str, Any], handle: str, hero: Image.Image, ip: Image.Image) -> Image.Image:
+    def signature(self, canvas: Image.Image, value: str, box: tuple[int, int, int, int]) -> None:
+        x, y, width, height = box
+        latin = value.isascii()
+        font = self.fonts.get_signature(54 if latin else 46, latin)
+        bbox = font.getbbox(value)
+        text_width = max(1, bbox[2] - bbox[0])
+        text_height = max(1, bbox[3] - bbox[1])
+        layer = Image.new("RGBA", (text_width + 70, text_height + 40), (0, 0, 0, 0))
+        layer_draw = ImageDraw.Draw(layer)
+        layer_draw.text((24 - bbox[0], 14 - bbox[1]), value, font=font, fill=self.paper)
+        if not latin:
+            layer = layer.transform(
+                layer.size,
+                Image.Transform.AFFINE,
+                (1, -0.18, 16, 0, 1, 0),
+                resample=Image.Resampling.BICUBIC,
+            )
+        layer.thumbnail((width, height), Image.Resampling.LANCZOS)
+        canvas.alpha_composite(layer, (x + (width - layer.width) // 2, y + (height - layer.height) // 2))
+
+    def draw_ip_cover(self, cover: dict[str, Any], author_name: str, illustration: Image.Image) -> Image.Image:
+        title = str(cover.get("title") or "").strip()
+        if not title:
+            raise ValueError("IP cover data is missing title")
+        canvas = Image.new("RGBA", (W, H), self.accent)
+        draw = ImageDraw.Draw(canvas)
+
+        self.fill(draw, (60, 52, 960, 250), self.paper, 24)
+        arranged = self.balanced_title(title)
+        lines = arranged.split("\n")
+        size = 60
+        while size > 38 and (
+            max(self.measure(line, self.fonts.get(size, "bold")) for line in lines) > 930
+            or len(lines) * (size * 1.2) > 250
+        ):
+            size -= 1
+        self.text(draw, arranged, (85, 72, 910, 220), size, "bold", self.deep, "center", 7)
+
+        window = (60, 348, 960, 720)
+        self.fill(draw, window, (232, 230, 226, 255), 24)
+        self.stroke(draw, window, self.deep, 3, 24)
+        self.fill(draw, (60, 348, 960, 56), (218, 216, 212, 255), 24)
+        self.fill(draw, (60, 386, 960, 18), (218, 216, 212, 255))
+        for cx, color in ((91, (255, 95, 87, 255)), (121, (255, 189, 46, 255)), (151, (40, 201, 64, 255))):
+            draw.ellipse((cx - 8, 368 - 8, cx + 8, 368 + 8), fill=color)
+        self.fill(draw, (80, 418, 920, 630), self.paper, 10)
+        self.aspect_fill(canvas, illustration, (80, 418, 920, 630))
+
+        self.rule(draw, 340, 1156, 740, 1156, self.paper[:3] + (105,), 2)
+        self.text(draw, "AUTHOR", (440, 1182, 200, 26), 16, "medium", self.paper[:3] + (190,), "center", 0)
+        self.signature(canvas, author_name, (250, 1215, 580, 130))
+        return canvas
+
+    def draw_book_cover(self, cover: dict[str, Any], handle: str, author_name: str, hero: Image.Image, ip: Image.Image) -> Image.Image:
         canvas = Image.new("RGBA", (W, H), self.paper)
         draw = ImageDraw.Draw(canvas)
         self.fill(draw, (0, 0, 38, H), self.deep)
@@ -346,7 +434,7 @@ class Renderer:
         self.rule(draw, 84, 832, 646, 832, self.accent, 3)
         self.fill(draw, (84, 862, 8, 42), self.accent, 3)
         self.text(draw, "作者", (112, 867, 80, 30), 19, "semibold", self.accent, spacing=0)
-        self.text(draw, str(cover["author"]), (198, 860, 430, 42), 29, "semibold", self.ink, spacing=0)
+        self.text(draw, str(cover.get("author") or author_name), (198, 860, 430, 42), 29, "semibold", self.ink, spacing=0)
         if handle:
             self.text(draw, handle, (84, 1290, 430, 34), 22, "semibold", self.paper, spacing=0)
             self.rule(draw, 84, 1342, 455, 1342, self.paper[:3] + (102,), 2)
@@ -412,8 +500,8 @@ def resolve_asset(base: Path, value: str) -> Path:
     return path.resolve() if path.is_absolute() else (base / path).resolve()
 
 
-def runtime_check(font: str | None, mono_font: str | None) -> int:
-    regular, bold, mono = resolve_font_paths(font, mono_font)
+def runtime_check(font: str | None, mono_font: str | None, signature_font: str | None) -> int:
+    regular, bold, mono, signature = resolve_font_paths(font, mono_font, signature_font)
     print(json.dumps({
         "platform": platform.system(),
         "python": platform.python_version(),
@@ -421,6 +509,7 @@ def runtime_check(font: str | None, mono_font: str | None) -> int:
         "font_regular": str(regular),
         "font_bold": str(bold),
         "font_mono": str(mono),
+        "font_signature": str(signature),
         "status": "ready",
     }, ensure_ascii=False, indent=2))
     return 0
@@ -434,6 +523,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--allow-draft", action="store_true")
     parser.add_argument("--font", help="Path to a Chinese TrueType/OpenType font")
     parser.add_argument("--mono-font", help="Path to a monospace TrueType/OpenType font")
+    parser.add_argument("--signature-font", help="Optional signature font for the cover author name")
     parser.add_argument("--check", action="store_true", help="Check Pillow and font availability")
     return parser
 
@@ -442,7 +532,7 @@ def main() -> int:
     args = build_parser().parse_args()
     try:
         if args.check:
-            return runtime_check(args.font, args.mono_font)
+            return runtime_check(args.font, args.mono_font, args.signature_font)
         if not all((args.cards_json, args.output_dir, args.profile_json)):
             raise ValueError("cards_json, output_dir, and profile_json are required unless --check is used")
         input_path = Path(args.cards_json).expanduser().resolve()
@@ -455,17 +545,30 @@ def main() -> int:
         theme_path = resolve_asset(profile_path.parent, assets["theme"])
         pose_path = resolve_asset(profile_path.parent, assets["card_pose"])
         theme = load_json(theme_path)
-        regular, bold, mono = resolve_font_paths(args.font, args.mono_font)
-        renderer = Renderer(theme, Fonts(regular, bold, mono))
+        regular, bold, mono, signature = resolve_font_paths(args.font, args.mono_font, args.signature_font)
+        renderer = Renderer(theme, Fonts(regular, bold, mono, signature))
         ip = renderer.open_image(pose_path)
         payload = load_json(input_path)
         handle = payload.get("handle") or theme.get("handle") or ""
         brand = theme.get("brandLabel") or theme["profileName"]
+        author_name = profile.get("author_name") or theme.get("profileName") or profile.get("name")
+        if not isinstance(author_name, str) or not author_name.strip():
+            raise ValueError("profile is missing author_name")
+        author_name = author_name.strip()
         output_dir.mkdir(parents=True, exist_ok=True)
         cover = payload.get("cover")
         if cover:
-            hero = renderer.open_image(resolve_asset(input_path.parent, cover["hero"]))
-            cover_image = renderer.draw_book_cover(cover, handle, hero, ip)
+            if cover.get("illustration"):
+                illustration = renderer.open_image(resolve_asset(input_path.parent, cover["illustration"]))
+                cover_image = renderer.draw_ip_cover(cover, author_name, illustration)
+            elif cover.get("artwork"):
+                artwork = renderer.open_image(resolve_asset(input_path.parent, cover["artwork"]))
+                cover_image = renderer.draw_ip_cover(cover, author_name, artwork)
+            elif cover.get("hero"):
+                hero = renderer.open_image(resolve_asset(input_path.parent, cover["hero"]))
+                cover_image = renderer.draw_book_cover(cover, handle, author_name, hero, ip)
+            else:
+                raise ValueError("cover must contain illustration (new), artwork, or hero (legacy)")
             cover_path = output_dir / "cover.png"
             cover_image.convert("RGB").save(cover_path, "PNG", optimize=True)
             print(cover_path)

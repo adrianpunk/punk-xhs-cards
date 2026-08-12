@@ -1,4 +1,4 @@
 interface:
   display_name: "Punk XHS Cards"
   short_description: "从个人 IP 和 Markdown 生成小红书书封知识卡片"
-  default_prompt: "使用 $punk-xhs-cards 开始首次引导：先显示 Punk 的简短欢迎语，再引导我上传人物照片或已有 IP 图，并询问希望人物在卡片里做什么动作；确认人物、动作和卡片样式后，把带关键图的 Markdown 制作成书封面与小红书内页。"
+  default_prompt: "使用 $punk-xhs-cards 开始首次引导：先显示 Punk 的简短欢迎语，再引导我上传人物照片或已有 IP 图，并询问人物名称（同时作为封面作者名）、卡片动作和指定主题色；未指定颜色时从 IP 提取并请我确认。人物与样式确认后，调用 $punk-ip-article-illustrations 根据 Markdown 生成主题插图，再制作主题色背景、4:3 Mac 网页框、准确标题和签名作者名的封面与小红书内页。"

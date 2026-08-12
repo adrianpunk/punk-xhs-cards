@@ -57,9 +57,12 @@
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "slug": "zhang-san",
   "name": "张三",
+  "author_name": "张三",
+  "theme_color": "#3366AA",
+  "theme_color_source": "user",
   "status": "confirmed",
   "revision": 1,
   "created_at": "2026-08-09T00:00:00+00:00",
@@ -75,6 +78,10 @@
 
 `current-character.json` 只保存当前已确认角色的 slug 和 manifest 相对路径，不复制完整人物规范。
 
+`name` 是人物创建阶段由用户确认的人物名称；注册脚本同时把它保存为 `author_name`。`author_name` 是封面作者的唯一来源，不从后续 Markdown 提取。修订人物名称时应重新注册人物并同步新 profile。
+
+用户可以在人物创建阶段指定 `theme_color`；注册时使用 `--theme-color '#RRGGBB'`，并记录 `theme_color_source: user`。未指定时允许为空，后续 card profile 阶段再从人物 IP 提取候选色并请用户确认。
+
 ## 注册脚本
 
 从 Skill 根目录运行。`<runtime-root>` 是前述 `.punk-ip-assets` 目录。
@@ -86,6 +93,7 @@ python3 scripts/character_registry.py register \
   --root <runtime-root> \
   --slug zhang-san \
   --name "张三" \
+  --theme-color '#3366AA' \
   --sheet <角色设定板路径> \
   --clean-reference <干净人物参考图路径> \
   --spec <人物规范路径>

@@ -7,12 +7,7 @@ from urllib.parse import unquote, urlparse
 
 
 TITLE_FRONTMATTER = re.compile(r"^\s*title\s*:\s*[\"']?(.+?)[\"']?\s*$", re.I)
-AUTHOR_MARKER = re.compile(r"^\s*(?:author|作者)\s*[：:]\s*[\"']?(.+?)[\"']?\s*$", re.I)
 H1 = re.compile(r"^\s*#\s+(.+?)\s*$")
-AUTHOR_SECTION = re.compile(
-    r"^\s*(?:#{1,6}\s*)?(?:[*_`]+\s*)?(?:关于作者|作者简介)(?:\s*[*_`]+)?\s*$",
-    re.I,
-)
 MARKDOWN_IMAGE = re.compile(r"!\[([^\]]*)\]\(\s*(?:<([^>]+)>|([^\s)]+))(?:\s+[\"']([^\"']*)[\"'])?\s*\)")
 HTML_IMAGE = re.compile(r"<img\b[^>]*?\bsrc\s*=\s*[\"']([^\"']+)[\"'][^>]*>", re.I)
 HTML_ALT = re.compile(r"\balt\s*=\s*[\"']([^\"']*)[\"']", re.I)
@@ -127,50 +122,16 @@ def parse(path: Path) -> dict:
                 title = match.group(1).strip()
                 break
 
-    author = None
-    author_line = None
-    author_section_start = None
-    for index in range(len(lines) - 1, -1, -1):
-        match = AUTHOR_MARKER.match(lines[index])
-        if match:
-            author = match.group(1).strip()
-            author_line = index + 1
-            break
-
-    if not author:
-        for index in range(len(lines) - 1, -1, -1):
-            if not AUTHOR_SECTION.match(lines[index]):
-                continue
-            author_section_start = index
-            for candidate_index in range(index + 1, len(lines)):
-                candidate = lines[candidate_index].strip()
-                if not candidate:
-                    continue
-                candidate = re.sub(r"[*_`]+", "", candidate)
-                candidate = re.sub(r"^\[([^]]+)\]\([^)]*\)$", r"\1", candidate)
-                author = re.split(r"[｜|]", candidate, maxsplit=1)[0].strip()
-                author_line = candidate_index + 1
-                break
-            break
-
-    cleaned_lines = list(lines)
-    if author_section_start is not None:
-        cleaned_lines = cleaned_lines[:author_section_start]
-    elif author_line is not None:
-        cleaned_lines.pop(author_line - 1)
-
     return {
         "source": str(path.resolve()),
         "title": title,
-        "author": author,
-        "author_line": author_line,
         "images": image_inventory(lines, path),
-        "cleaned_markdown": "\n".join(cleaned_lines).rstrip() + "\n",
+        "cleaned_markdown": source.rstrip() + "\n",
     }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Extract title, trailing author marker, and image inventory from Markdown")
+    parser = argparse.ArgumentParser(description="Extract title and image inventory from Markdown")
     parser.add_argument("markdown", type=Path)
     parser.add_argument("--write-clean", type=Path)
     args = parser.parse_args()

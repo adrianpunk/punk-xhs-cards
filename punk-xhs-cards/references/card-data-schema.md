@@ -8,14 +8,15 @@
   "handle": "@用户账号",
   "cover": {
     "title": "完整封面书名",
-    "author": "Markdown 文末标注的作者",
-    "hero": "hero.png"
+    "illustration": "cover-illustration.png"
   },
   "cards": []
 }
 ```
 
-`hero` 的相对路径以 `cards.json` 所在目录为基准，也可使用绝对路径。
+`illustration` 是由 `$punk-ip-article-illustrations` 根据 Markdown 内容和当前 IP 生成的 16:9 主题插图。相对路径以 `cards.json` 所在目录为基准，也可使用绝对路径。渲染器把它嵌入 4:3 Mac 网页框；作者不写入 `cards.json`，从 profile 的 `author_name` 读取。
+
+为已有输出保持兼容，渲染器仍可读取旧 `hero`、`artwork` 和旧 `cover.author`；新文章禁止继续生成旧格式。
 
 ## 内页卡
 

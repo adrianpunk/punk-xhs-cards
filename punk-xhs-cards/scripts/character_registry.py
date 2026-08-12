@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 MANIFEST_NAME = "character.json"
 CURRENT_NAME = "current-character.json"
 
@@ -93,6 +94,10 @@ def resolved_manifest(root: Path, slug: str, allow_draft: bool = False) -> dict:
             raise FileNotFoundError(f"Missing {key}: {path}")
         assets[key] = str(path.resolve())
     manifest["assets"] = assets
+    author_name = manifest.get("author_name") or manifest.get("name")
+    if not isinstance(author_name, str) or not author_name.strip():
+        raise ValueError(f"Character '{slug}' is missing a valid author name")
+    manifest["author_name"] = author_name.strip()
     manifest["manifest_path"] = str((directory / MANIFEST_NAME).resolve())
     return manifest
 
@@ -109,10 +114,16 @@ def command_register(args: argparse.Namespace) -> None:
     spec = copy_versioned(Path(args.spec), directory, "character-spec", ".md")
 
     now = utc_now()
+    theme_color = args.theme_color or old.get("theme_color")
+    if theme_color and not COLOR_RE.fullmatch(theme_color):
+        raise ValueError("theme-color must use #RRGGBB")
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "slug": args.slug,
         "name": args.name,
+        "author_name": args.name,
+        "theme_color": theme_color,
+        "theme_color_source": "user" if args.theme_color else old.get("theme_color_source"),
         "status": "draft",
         "revision": int(old.get("revision", 0)) + 1,
         "created_at": old.get("created_at", now),
@@ -199,6 +210,8 @@ def command_list(args: argparse.Namespace) -> None:
                 {
                     "slug": item.get("slug"),
                     "name": item.get("name"),
+                    "author_name": item.get("author_name") or item.get("name"),
+                    "theme_color": item.get("theme_color"),
                     "status": item.get("status"),
                     "revision": item.get("revision"),
                     "active": item.get("slug") == active,
@@ -216,6 +229,7 @@ def build_parser() -> argparse.ArgumentParser:
     register.add_argument("--root", required=True)
     register.add_argument("--slug", required=True)
     register.add_argument("--name", required=True)
+    register.add_argument("--theme-color", help="Optional user-selected theme color in #RRGGBB format")
     register.add_argument("--sheet", required=True)
     register.add_argument("--clean-reference", required=True)
     register.add_argument("--spec", required=True)

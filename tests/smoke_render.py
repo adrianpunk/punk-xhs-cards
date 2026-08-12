@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import tempfile
+from contextlib import nullcontext
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -22,8 +23,11 @@ def write_json(path: Path, value: dict) -> None:
 
 
 def main() -> int:
-    with tempfile.TemporaryDirectory(prefix="punk-xhs-cards-smoke-") as temp_value:
+    keep = os.environ.get("PUNK_XHS_SMOKE_OUTPUT")
+    context = nullcontext(keep) if keep else tempfile.TemporaryDirectory(prefix="punk-xhs-cards-smoke-")
+    with context as temp_value:
         temp = Path(temp_value)
+        temp.mkdir(parents=True, exist_ok=True)
         profile_dir = temp / "profile"
         profile_dir.mkdir()
         pose = Image.new("RGBA", (320, 480), (0, 0, 0, 0))
@@ -31,11 +35,11 @@ def main() -> int:
         pose_draw.ellipse((80, 20, 240, 180), fill=(40, 35, 32, 255))
         pose_draw.rounded_rectangle((45, 160, 275, 455), radius=60, fill=(200, 55, 42, 255))
         pose.save(profile_dir / "pose.png")
-        hero = Image.new("RGB", (1600, 900), (247, 242, 234))
-        hero_draw = ImageDraw.Draw(hero)
-        hero_draw.rounded_rectangle((350, 220, 1250, 680), radius=80, fill=(45, 42, 40))
-        hero_draw.rectangle((350, 420, 1250, 480), fill=(200, 55, 42))
-        hero.save(temp / "hero.png")
+        illustration = Image.new("RGB", (1200, 675), (247, 242, 234))
+        illustration_draw = ImageDraw.Draw(illustration)
+        illustration_draw.rounded_rectangle((220, 100, 980, 575), radius=80, fill=(45, 42, 40))
+        illustration_draw.rectangle((220, 300, 980, 370), fill=(200, 55, 42))
+        illustration.save(temp / "cover-illustration.png")
         screenshot = Image.new("RGB", (1200, 700), (238, 238, 238))
         screenshot_draw = ImageDraw.Draw(screenshot)
         screenshot_draw.rounded_rectangle((100, 80, 1100, 620), radius=24, fill=(38, 38, 38))
@@ -52,16 +56,17 @@ def main() -> int:
             }
         })
         write_json(profile_dir / "profile.json", {
-            "schema_version": 2,
+            "schema_version": 3,
             "slug": "demo",
             "name": "Demo",
+            "author_name": "Demo Author",
             "card_action": "站立讲解",
             "status": "confirmed",
             "assets": {"card_pose": "pose.png", "theme": "theme.json"}
         })
         write_json(temp / "cards.json", {
             "handle": "@demo",
-            "cover": {"title": "跨平台知识卡片渲染测试", "author": "Demo", "hero": "hero.png"},
+            "cover": {"title": "跨平台知识卡片渲染测试", "illustration": "cover-illustration.png"},
             "cards": [{
                 "kind": "content",
                 "eyebrow": "01 · 跨平台",

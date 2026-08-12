@@ -46,6 +46,7 @@ python3 scripts/profile_registry.py register \
   --root <runtime-root> \
   --slug <slug> \
   --name "<显示名称>" \
+  --author-name "<人物创建阶段确认的名称>" \
   --action "<用户确认的卡片动作>" \
   --sheet <character-sheet.png> \
   --clean-reference <character-clean.png> \
@@ -55,6 +56,8 @@ python3 scripts/profile_registry.py register \
 ```
 
 不得在用户未确认动作时注册新 profile。旧版 profile 如果没有 `card_action`，解析器会只为兼容目的补上原有的“盘腿使用电脑，身体和视线朝向内容区”；下一次修订时必须重新询问并写入用户明确选择的动作。
+
+`author_name` 必须从已确认 character manifest 复制，封面只读取这个字段。旧 profile 没有该字段时，解析器会优先读取 `theme.json` 的 `profileName`，最后才回退到 profile 显示名称；下一次修订必须写入明确的 `author_name`。
 
 ## 确认与解析
 

@@ -89,6 +89,18 @@ def resolved_manifest(root: Path, slug: str, allow_draft: bool = False) -> dict:
             raise FileNotFoundError(f"Missing {key}: {path}")
         assets[key] = str(path.resolve())
     manifest["assets"] = assets
+    author_name = manifest.get("author_name")
+    if not isinstance(author_name, str) or not author_name.strip():
+        try:
+            theme = load_json(Path(assets["theme"]))
+            author_name = theme.get("profileName")
+        except (FileNotFoundError, json.JSONDecodeError, OSError):
+            author_name = None
+    if not isinstance(author_name, str) or not author_name.strip():
+        author_name = manifest.get("name")
+    if not isinstance(author_name, str) or not author_name.strip():
+        raise ValueError(f"Profile '{slug}' is missing a valid author name")
+    manifest["author_name"] = author_name.strip()
     action = manifest.get("card_action")
     if not isinstance(action, str) or not action.strip():
         action = LEGACY_CARD_ACTION
@@ -106,6 +118,9 @@ def command_register(args: argparse.Namespace) -> None:
     action = args.action.strip()
     if not action:
         raise ValueError("action must not be empty")
+    author_name = args.author_name.strip()
+    if not author_name:
+        raise ValueError("author-name must not be empty")
     assets = {
         "sheet": copy_versioned(Path(args.sheet), directory, "character-sheet").name,
         "clean_reference": copy_versioned(Path(args.clean_reference), directory, "character-clean").name,
@@ -115,9 +130,10 @@ def command_register(args: argparse.Namespace) -> None:
     }
     now = utc_now()
     manifest = {
-        "schema_version": 2,
+        "schema_version": 3,
         "slug": args.slug,
         "name": args.name,
+        "author_name": author_name,
         "card_action": action,
         "status": "draft",
         "revision": int(old.get("revision", 0)) + 1,
@@ -191,6 +207,7 @@ def command_list(args: argparse.Namespace) -> None:
             result.append({
                 "slug": item.get("slug"),
                 "name": item.get("name"),
+                "author_name": item.get("author_name") or item.get("name"),
                 "status": item.get("status"),
                 "revision": item.get("revision"),
                 "card_action": item.get("card_action") or LEGACY_CARD_ACTION,
@@ -204,7 +221,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Manage XHS IP card profiles")
     commands = parser.add_subparsers(dest="command", required=True)
     register = commands.add_parser("register")
-    for name in ("root", "slug", "name", "action", "sheet", "clean-reference", "card-pose", "spec", "theme"):
+    for name in ("root", "slug", "name", "author-name", "action", "sheet", "clean-reference", "card-pose", "spec", "theme"):
         register.add_argument(f"--{name}", required=True)
     register.set_defaults(func=command_register)
     confirm = commands.add_parser("confirm")
