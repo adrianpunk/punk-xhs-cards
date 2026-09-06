@@ -201,6 +201,10 @@ Skill 会把用户照片、人物 profile、文章和卡片输出保存在运行
 
 图片生成过程仍会把用户提供的参考图交给当前宿主的图像生成服务处理；请根据你使用的平台和账号设置判断是否适合上传相应照片。
 
+## License
+
+本仓库内容采用 [MIT License](./LICENSE) 发布；仓库中另有明确授权或声明的第三方素材除外。
+
 ## 当前边界
 
 - macOS、Windows 和 Linux 共用 Python/Pillow 渲染器；旧版 Swift/AppKit 文件只为兼容保留
