@@ -203,7 +203,14 @@ Skill 会把用户照片、人物 profile、文章和卡片输出保存在运行
 
 ## License
 
-本仓库内容采用 [MIT License](./LICENSE) 发布；仓库中另有明确授权或声明的第三方素材除外。
+Punk XHS Cards 采用个人非商用 + 商业付费双轨授权：
+
+- 个人非商用：可按照 [Punk XHS Cards Personal Use License 1.0](./LICENSE-PERSONAL.md) 免费使用；
+- 商业使用：必须事先取得权利人的书面商业授权，并支付适用的许可费用。申请流程见 [Commercial Licensing](./COMMERCIAL-LICENSE.md)，联系邮箱为 `adrian.pduck@gmail.com`。
+
+许可入口见 [LICENSE](./LICENSE)。此前已经按照 MIT License 发布的版本继续适用其原有 MIT License；历史协议见 [LICENSE-MIT-LEGACY](./LICENSE-MIT-LEGACY)。
+
+第三方素材不因本仓库的许可声明而获得重新授权，详见 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。
 
 ## 当前边界
 
